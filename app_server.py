@@ -5,9 +5,11 @@ ENCODING_TYPE = 'utf-8'
 PORT = 5053
 HEADER_SIZE = 1024
 
+
 def app_server(port, header_size, ip_protocol):
     s1 = Server(port=port, header_size=header_size, ip_protocol=ip_protocol)
     s1.start()
+
 
 if __name__ == "__main__":
     ip_protocol = None
