@@ -37,11 +37,11 @@ class Server:
 
             if len(msg) > 5:
                 with open(
-                    './recv/recv'+str(datetime.timestamp(datetime.now()))+".csv", 'w'
+                    './recv/recv:'+str(datetime.now().strftime("%m_%d_%Y_%H:%M:%S"))+".csv", 'w'
                         ) as f:
                     f.write(msg)
 
-            response = "Recived msg " + str(len(msg))
+            response = "Recived msg " + str(len(msg)) + " " + str(datetime.now().strftime("%m_%d_%Y_%H:%M:%S"))
             if msg == self.disconnect_msg:
                 connected = False
             val.sendall(response.encode(self.encoding))
