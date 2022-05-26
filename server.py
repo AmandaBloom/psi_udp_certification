@@ -1,39 +1,65 @@
-from concurrent.futures import thread
+import csv
 import socket
 import threading
+from concurrent.futures import thread
+from datetime import datetime
 
-HEADER_SIZE = 128
-PORT = 5053
-SERVER = socket.gethostbyname(socket.gethostname()+".local")
-ADDR = (SERVER, PORT)
-ENCODING_TYPE = 'utf-8'
-# ENCODING_TYPE = 'ascii'
-DISCONNECT_MSG = "/EOF"
+class Server:
+    def __init__(self, port, header_size, ip_protocol, server_adr=None, encoding='utf-8', disconnect_msg="/EOF"):
+        self.port = port
+        self.header_size = header_size
+        self.encoding = encoding 
+        self.disconnect_msg = disconnect_msg
+        if ip_protocol == "v6":
+            if not server_adr:
+                server_v6 = socket.getaddrinfo("localhost", port=port, family=socket.AF_INET6)
+                self.server_adr = server_v6[0][4][0]
+            else:
+                self.server_adr = server_adr  
+            self.addr = (self.server_adr, self.port)
+            self.server = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)  # ipv6
+            self.server.bind(self.addr) 
+        else:
+            if not server_adr:
+                self.server_adr = socket.gethostbyname(socket.gethostname()+".local")
+            else:
+                self.server_adr = server_adr   
+            self.addr = (self.server_adr, self.port)
+            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # ipv4
+            self.server.bind(self.addr) 
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # ipv4
-server.bind(ADDR) 
+    def new_client(self, val, addr):
+        print(f"{addr} connected")
+        connected = True
+        while connected:
+            msg = val.recv(self.header_size).decode(self.encoding)
+            print("from: ", addr, " message_len: ", len(msg))
 
-def new_client(val, addr):
-    print(f"{addr} connected")
-    connected = True
-    while connected:
-        msg = val.recv(HEADER_SIZE).decode(ENCODING_TYPE)
-        print("from: ", addr, " message: ", msg)
-        response = "Recived msg " + str(len(msg))
-        if msg == DISCONNECT_MSG:
-            connected = False
-        val.sendall(response.encode(ENCODING_TYPE))
-    print("client disconected")
-    val.close()
+            if len(msg) > 5:
+                with open(
+                    './recv/recv'+str(datetime.timestamp(datetime.now()))+".csv", 'w'
+                        ) as f:
+                    f.write(msg)
 
-def start():
-    print(f"Server is listening...")
-    server.listen()
-    while True:
-        val, addr = server.accept()
-        thread = threading.Thread(target=new_client, args=(val, addr))
-        thread.start()
-        print(f"connected clients: {threading.active_count() - 1}")
+            response = "Recived msg " + str(len(msg))
+            if msg == self.disconnect_msg:
+                connected = False
+            val.sendall(response.encode(self.encoding))
+        print("client disconected")
+        val.close()
     
-
-start()
+    def start(self):
+        print(f"Server is listening... {self.server_adr}:{self.port}")
+        self.server.listen()
+        while True:
+            try:
+                val, addr = self.server.accept()
+            except KeyboardInterrupt:
+                socket.close()
+                print("\nKeyboard Interrupt")
+                print("Connection closed.\nSession ended.")
+                return
+            
+            new_thread = threading.Thread(target=self.new_client, args=(val, addr))
+            new_thread.start()
+            print(f"connected clients: {threading.active_count() - 1}")

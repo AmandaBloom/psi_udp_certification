@@ -1,25 +1,32 @@
+import csv
 import socket
+import sys
+import time
 from urllib import response
 
-PORT = 5053
-SERVER = "172.16.14.44"
-ADDR = (SERVER, PORT)
-HEADER_SIZE = 128
-ENCODING_TYPE = 'utf-8'
-# ENCODING_TYPE = 'ascii'
-DISCONNECT_MSG = "/EOF"
+class Client:
+    def __init__(self, port, header_size, server_adr, ip_protocol, encoding='utf-8', disconnect_msg="/EOF"):
+        self.port = port
+        self.header_size = header_size
+        self.server_adr = server_adr
+        self.encoding = encoding
+        self.addr = (self.server_adr, self.port)
+        self.disconnect_msg = disconnect_msg
+        if ip_protocol == "v6":
+            self.client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        else:
+            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDR)
+    def connect(self):
+        self.client.connect(self.addr)
 
-def send_m(msg):
-    msg = msg.encode(ENCODING_TYPE)
-    client.sendall(msg) 
-    print(client.recv(2048).decode(ENCODING_TYPE))
+    def disconnect(self):
+        self.send_m(self.disconnect_msg)
 
-send_m("Hello1")
-input()
-send_m("Hello2")
-input()
-send_m(DISCONNECT_MSG)
+    def send_m(self, msg):
+        msg = msg.encode(self.encoding)
+        self.client.sendall(msg) 
+        print(self.client.recv(2048).decode(self.encoding))
 
+
+ 
