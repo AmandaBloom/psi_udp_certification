@@ -6,7 +6,6 @@ import threading
 from concurrent.futures import thread
 from datetime import datetime
 
-
 class Server:
     def __init__(self, port, header_size, ip_protocol, server_adr=None, encoding='utf-8', disconnect_msg="/EOF"):
         self.port = port
@@ -39,19 +38,22 @@ class Server:
         print(f"New Client --- {self.server_adr}:{addr[1]} connected")
         connected = True
         while connected:
-            msg = val.recv(self.header_size).decode(self.encoding)
-            print(f"from: {self.server_adr}:{addr[1]} message_len: {len(msg)}")
+            msg_len = val.recv(self.header_size).decode(self.encoding)
+            if msg_len:
+                msg_len = int(msg_len)
+                msg = val.recv(msg_len).decode(self.encoding)
+                print(f"from: {self.server_adr}:{addr[1]} message_len: {len(msg)}")
 
-            if len(msg) > 5:
-                with open(
-                    './recv/recv'+str(datetime.now().strftime("%m_%d_%Y_%H%M%S"))+".csv", 'w'
-                        ) as f:
-                    f.write(msg)
+                if len(msg) > 5:
+                    with open(
+                        './recv/recv'+str(datetime.now().strftime("%m_%d_%Y_%H%M%S"))+".csv", 'w'
+                            ) as f:
+                        f.write(msg)
 
-            response = "Recived msg " + str(len(msg)) + " " + str(datetime.now().strftime("%m_%d_%Y_%H:%M:%S"))
-            if msg == self.disconnect_msg:
-                connected = False
-            val.sendall(response.encode(self.encoding))
+                response = "Recived msg " + str(len(msg)) + " " + str(datetime.now().strftime("%m_%d_%Y_%H:%M:%S"))
+                if msg == self.disconnect_msg:
+                    connected = False
+                val.sendall(response.encode(self.encoding))
         print("client disconected")
         val.close()
     

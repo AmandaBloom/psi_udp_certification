@@ -3,7 +3,7 @@ import sys
 
 ENCODING_TYPE = 'utf-8'
 PORT = 5053
-HEADER_SIZE = 1024
+HEADER_SIZE = 128
 
 
 def app_server(port, header_size, ip_protocol):

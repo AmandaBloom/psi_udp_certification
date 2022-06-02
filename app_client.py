@@ -9,7 +9,7 @@ from urllib import response
 
 ENCODING_TYPE = 'utf-8'
 PORT = 5053
-HEADER_SIZE = 1024
+HEADER_SIZE = 128
 
 
 def app_client(encoding_type, port, header_size, server_adr, ip_protocol):

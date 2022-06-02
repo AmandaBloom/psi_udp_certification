@@ -25,7 +25,11 @@ class Client:
 
     def send_m(self, msg):
         msg = msg.encode(self.encoding)
-        self.client.sendall(msg) 
+        msg_len = len(msg)
+        send_len = str(msg_len).encode(self.encoding)
+        send_len += b' ' * (self.header_size - len(send_len)) 
+        self.client.send(send_len)
+        self.client.send(msg) 
         print(self.client.recv(2048).decode(self.encoding))
 
 
