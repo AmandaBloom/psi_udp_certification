@@ -1,5 +1,6 @@
 import time
 from client import Client
+from client_no_cert import Client_no_cert
 import sys
 import csv
 import socket
@@ -23,12 +24,29 @@ def app_client(encoding_type, port, header_size, server_adr, ip_protocol):
         c1.send_m(msg)
     time.sleep(1)
 
+    c2 = Client(port=port, header_size=header_size, server_adr=server_adr, ip_protocol=ip_protocol)
+    c2.connect()
+    with open('sampleCSV/trees.csv', 'r', encoding=encoding_type) as file:
+        msg = file.read()
+        c2.send_m(msg)
+    time.sleep(1)
+    c2.disconnect()
     with open('sampleCSV/trees.csv', 'r', encoding=encoding_type) as file:
         msg = file.read()
         c1.send_m(msg)
     time.sleep(1)
 
     c1.disconnect()
+    c4 = Client_no_cert(port=port, header_size=header_size, server_adr=server_adr, ip_protocol=ip_protocol)
+    c4.connect()
+    c4.send_m('hello hello hello')
+    c5 = Client(port=port, header_size=header_size, server_adr=server_adr, ip_protocol=ip_protocol)
+    c5.connect()
+    with open('sampleCSV/trees.csv', 'r', encoding=encoding_type) as file:
+        msg = file.read()
+        c5.send_m(msg)
+    time.sleep(1)
+    c5.disconnect()
 
 
 if __name__ == "__main__":

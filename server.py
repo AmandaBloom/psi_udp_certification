@@ -5,6 +5,7 @@ import socket
 import threading
 from concurrent.futures import thread
 from datetime import datetime
+import ssl
 
 class Server:
     def __init__(self, port, header_size, ip_protocol, server_adr=None, encoding='utf-8', disconnect_msg="/EOF"):
@@ -12,6 +13,12 @@ class Server:
         self.header_size = header_size
         self.encoding = encoding 
         self.disconnect_msg = disconnect_msg
+        self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        self.context.verify_mode = ssl.CERT_REQUIRED
+        self.server_cert = 'server.crt'
+        self.server_key = 'server.key'
+        self.client_certs = 'client.crt'
+
         if ip_protocol == "v6":
             if not server_adr:
                 server_v6 = socket.getaddrinfo("localhost", port=port, family=socket.AF_INET6)
@@ -34,28 +41,28 @@ class Server:
             self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # ipv4
             self.server.bind(self.addr)
 
-    def new_client(self, val, addr):
+    def new_client(self, val, addr, conn_with_client):
         print(f"New Client --- {self.server_adr}:{addr[1]} connected")
         connected = True
         while connected:
-            msg_len = val.recv(self.header_size).decode(self.encoding)
+            msg_len = conn_with_client.recv(self.header_size).decode(self.encoding)
             if msg_len:
                 msg_len = int(msg_len)
-                msg = val.recv(msg_len).decode(self.encoding)
+                msg = conn_with_client.recv(msg_len).decode(self.encoding)
                 print(f"from: {self.server_adr}:{addr[1]} message_len: {len(msg)}")
 
                 if len(msg) > 5:
                     with open(
-                        './recv/recv'+str(datetime.now().strftime("%m_%d_%Y_%H%M%S"))+".csv", 'w'
+                        './recv/recv'+str(datetime.now().strftime("%m_%d_%Y_%H%M%S_"))+ str(addr[1]) + ".csv", 'w'
                             ) as f:
                         f.write(msg)
 
                 response = "Recived msg " + str(len(msg)) + " " + str(datetime.now().strftime("%m_%d_%Y_%H:%M:%S"))
                 if msg == self.disconnect_msg:
                     connected = False
-                val.sendall(response.encode(self.encoding))
+                conn_with_client.sendall(response.encode(self.encoding))
         print("client disconected")
-        val.close()
+        conn_with_client.close()
     
     def start(self):
         print(f"Server is listening... {self.server_adr}:{self.port}")
@@ -63,12 +70,22 @@ class Server:
         while True:
             try:
                 val, addr = self.server.accept()
+                self.context.load_cert_chain(certfile=self.server_cert, keyfile=self.server_key)
+                self.context.load_verify_locations(cafile=self.client_certs)
+                conn_with_client = self.context.wrap_socket(val, server_side=True)
+                print("SSL established. Peer: {}".format(conn_with_client.getpeercert()))
+
+            except ssl.SSLError as ssl_error:
+                print(ssl_error)
+                print("Client: " + str(addr[1]) + " has no SSL and won't be connected to the server")
+                conn_with_client.close()
+                self.start()
             except KeyboardInterrupt:
                 self.server.close()
                 print("\nKeyboard Interrupt")
                 print("Connection closed.\nSession ended.")
                 return
 
-            new_thread = threading.Thread(target=self.new_client, args=(val, addr))
+            new_thread = threading.Thread(target=self.new_client, args=(val, addr, conn_with_client))
             new_thread.start()
             print(f"connected clients: {threading.active_count() - 1}")
