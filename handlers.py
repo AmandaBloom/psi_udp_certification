@@ -8,7 +8,7 @@ def deserialize(obj):
 def save_stream(stream, display=True):
     for message in stream.messages:
         with open(
-                f'./recv/connection_{message.con_id}.csv', 'a'
+                f'./recv/connection_{message.con_id}_stream{stream.stream_id}.csv', 'a'
                     ) as f:
                 f.write(str(message))
                 f.write("\n")

@@ -1,3 +1,4 @@
+from asyncio import streams
 from copyreg import pickle
 import pickle
 from pydoc import cli
@@ -11,6 +12,7 @@ import socket
 import sys
 import time
 from urllib import response
+import threading
 
 ENCODING_TYPE = 'utf-8'
 PORT = 5053
@@ -33,6 +35,9 @@ class AppClient:
         self.ever_streams = 0
         self.clients = []       
         self.streams = [] 
+
+    # def __str__(self):
+    #     return f"clients: \n {str(self.clients)} \n streams: \n {str(self.streams)} \n"
 
     def get_messages1(self, num, stream_id, con_id):
         messages = []
@@ -80,6 +85,13 @@ class AppClient:
             ids.append(client.client_id)
         
         return ids
+
+    def get_streams_ids(self):
+        ids = []
+        for stream in self.streams:
+            ids.append(stream.stream_id)
+        
+        return ids
     
     def disconnect_clients(self):
         ids = self.get_clients_ids()
@@ -105,28 +117,57 @@ class AppClient:
     def send_stream(self, client_id, stream_id):
         client = self.get_client(client_id)
         stream = self.get_stream(stream_id)
-        stream.load_stream(self.get_messages1(10, stream_id, client_id))
+        # stream.load_stream(self.get_messages1(10, stream_id, client_id))
         msg_stream = pickle.dumps(stream)
         client.send_m(msg_stream)
 
-    def send_streams(self):
-        pass
+    def get_client_streams(self, client_id):
+        ids = []
+        for stream in self.streams:
+            if stream.con_id == client_id:
+                ids.append(stream.stream_id)
+        return ids
+
+    def send_streams(self, client_id):
+        ids = self.get_client_streams(client_id)
+        for id in ids:
+            self.send_stream(client_id, id)
         
     def delete_stream(self):
         pass
+
 
 def run_app_client(port, header_size, server_adr, ip_protocol):
     app = AppClient(port, header_size, server_adr, ip_protocol)
     app.add_client()
     app.add_client()
+
     app.add_stream(1)
-    print(app.streams[0])
-    app.send_stream(1, 1)
-    print('ok')
-    print(app.get_clients_ids())
+    app.add_stream(1)
+    app.add_stream(1)
+    app.add_stream(2)
+    app.add_stream(2)
+
+    client_ids = app.get_clients_ids()
+
+    # load sample data to streams concurently 
+    waiting = []
+
+    for client_id in client_ids:
+        for stream_id in app.get_client_streams(client_id):
+            stream = app.get_stream(stream_id)
+            # stream.load_stream(app.get_messages1(10, stream_id, client_id))
+            t = threading.Thread(target=stream.load_stream, args=[app.get_messages1(10, stream_id, client_id)])
+            t.start()
+            waiting.append(t)
+
+    for t in waiting:
+        t.join()
+
+    app.send_streams(1)
+    app.send_streams(2)
+
     app.disconnect_clients()
-
-
 
 
 if __name__ == "__main__":
