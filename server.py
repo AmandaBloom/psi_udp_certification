@@ -14,9 +14,9 @@ class Server:
         self.header_size = header_size
         self.encoding = encoding 
         self.disconnect_msg = disconnect_msg
-        self.server_cert = 'server.crt'
-        self.server_key = 'server.key'
-        self.client_certs = 'client.crt'
+        self.server_cert = 'server_certs/server.crt'
+        self.server_key = 'server_certs/server.key'
+        self.client_certs = 'client_certs/client.crt'
         self.interrupt_flag = 0
         self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         self.context.verify_mode = ssl.CERT_REQUIRED

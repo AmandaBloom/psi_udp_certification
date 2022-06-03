@@ -15,9 +15,9 @@ class Client:
         self.addr = (self.server_adr, self.port)
         self.disconnect_msg = disconnect_msg
         self.server_sni_hostname = 'PSI'
-        self.server_cert = 'server.crt'
-        self.client_cert = 'client.crt'
-        self.client_key = 'client.key'
+        self.server_cert = 'server_certs/server.crt'
+        self.client_cert = 'client_certs/client.crt'
+        self.client_key = 'client_certs/client.key'
         self.context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=self.server_cert)
         self.context.load_cert_chain(certfile=self.client_cert, keyfile=self.client_key)
         if ip_protocol == "v6":
