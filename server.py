@@ -49,11 +49,6 @@ class Server:
                     msg = val.recv(msg_len)
                     print(f"from: {self.server_adr}:{addr[1]} message_len: {len(msg)}")
 
-                    # if len(msg) > 5:
-                    #     with open(
-                    #         './recv/recv'+str(datetime.now().strftime("%m_%d_%Y_%H%M%S"))+".csv", 'w'
-                    #             ) as f:
-                    #         f.write(str(msg))
                     received_stream = deserialize(msg)
                     save_stream(received_stream, display=True)
                     response = "Recived stream nr " + str(len(msg)) + " " + str(datetime.now().strftime("%m_%d_%Y_%H:%M:%S"))

@@ -5,7 +5,8 @@ import time
 from urllib import response
 
 class Client:
-    def __init__(self, port, header_size, server_adr, ip_protocol, encoding='utf-8', disconnect_msg=""):
+    def __init__(self, client_id, port, header_size, server_adr, ip_protocol, encoding='utf-8', disconnect_msg=""):
+        self.client_id = client_id
         self.port = port
         self.header_size = header_size
         self.server_adr = server_adr
