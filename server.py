@@ -75,10 +75,12 @@ class Server:
                 self.context.load_verify_locations(cafile=self.client_certs)
                 conn_with_client = self.context.wrap_socket(val, server_side=True)
                 print("SSL established. Peer: {}".format(conn_with_client.getpeercert()))
+                new_thread = threading.Thread(target=self.new_client, args=(val, addr, conn_with_client))
+                new_thread.start()
+                print(f"connected clients: {threading.active_count() - 1}")
             except ssl.SSLError as ssl_error:
                 print(ssl_error)
                 print("Client: " + str(addr[1]) + " has no SSL and won't be connected to the server")
-                conn_with_client.close()
                 self.start()
             except KeyboardInterrupt:
                 self.server.close()
@@ -86,6 +88,4 @@ class Server:
                 print("Connection closed.\nSession ended.")
                 return
 
-            new_thread = threading.Thread(target=self.new_client, args=(val, addr, conn_with_client))
-            new_thread.start()
-            print(f"connected clients: {threading.active_count() - 1}")
+
