@@ -1,4 +1,3 @@
-from asyncio import streams
 from copyreg import pickle
 import pickle
 from pydoc import cli
@@ -7,8 +6,6 @@ from client import Client
 from message import Message
 from stream import Stream
 import sys
-import csv
-import socket
 import sys
 import time
 from urllib import response
@@ -18,12 +15,6 @@ ENCODING_TYPE = 'utf-8'
 PORT = 5053
 HEADER_SIZE = 128
 DISCONECT = ""
-
-# message
-# message_id, stream_id, con_id, text
-
-# stream
-# stream_id, con_id
 
 class AppClient:
     def __init__(self, port, header_size, server_adr, ip_protocol):
@@ -138,6 +129,8 @@ class AppClient:
 
 
 def run_app_client(port, header_size, server_adr, ip_protocol):
+    print("Welcome to AppClient")
+    print("Working...")
     app = AppClient(port, header_size, server_adr, ip_protocol)
     app.add_client()
     app.add_client()
@@ -164,8 +157,12 @@ def run_app_client(port, header_size, server_adr, ip_protocol):
     for t in waiting:
         t.join()
 
-    app.send_streams(1)
-    app.send_streams(2)
+    s1 = threading.Thread(target=app.send_streams, args=[1])
+    s2 = threading.Thread(target=app.send_streams, args=[2])
+    s1.start()
+    s2.start()
+    s1.join()
+    s2.join()
 
     app.disconnect_clients()
 
