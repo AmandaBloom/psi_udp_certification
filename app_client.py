@@ -16,7 +16,6 @@ HEADER_SIZE = 128
 def app_client(encoding_type, port, header_size, server_adr, ip_protocol):
     c1 = Client(port=port, header_size=header_size, server_adr=server_adr, ip_protocol=ip_protocol)
     c1.connect()
-    c1.send_m('hello hello hello')
     time.sleep(1)
 
     with open('sampleCSV/ford_escort.csv', 'r', encoding=encoding_type) as file:
@@ -45,7 +44,6 @@ def app_client(encoding_type, port, header_size, server_adr, ip_protocol):
     with open('sampleCSV/trees.csv', 'r', encoding=encoding_type) as file:
         msg = file.read()
         c5.send_m(msg)
-    time.sleep(1)
     c5.disconnect()
 
 
