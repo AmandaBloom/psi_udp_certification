@@ -5,7 +5,7 @@ import time
 from urllib import response
 
 class Client:
-    def __init__(self, port, header_size, server_adr, ip_protocol, encoding='utf-8', disconnect_msg="/EOF"):
+    def __init__(self, port, header_size, server_adr, ip_protocol, encoding='utf-8', disconnect_msg=""):
         self.port = port
         self.header_size = header_size
         self.server_adr = server_adr
@@ -21,16 +21,17 @@ class Client:
         self.client.connect(self.addr)
 
     def disconnect(self):
-        self.send_m(self.disconnect_msg)
+        self.send_m(self.disconnect_msg.encode())
 
     def send_m(self, msg):
-        msg = msg.encode(self.encoding)
         msg_len = len(msg)
         send_len = str(msg_len).encode(self.encoding)
         send_len += b' ' * (self.header_size - len(send_len)) 
         self.client.send(send_len)
+        if isinstance(msg, str):
+            msg = msg.encode()
         self.client.send(msg) 
-        print(self.client.recv(2048).decode(self.encoding))
+        print(self.client.recv(1024).decode(self.encoding))
 
 
  
