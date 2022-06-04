@@ -27,8 +27,16 @@ class Client:
 
     def connect(self):
         self.conn = self.context.wrap_socket(self.client, server_side=False, server_hostname=self.server_sni_hostname)
-        self.conn.connect(self.addr)
-        print("SSL established. Peer: {}".format(self.conn.getpeercert()))
+        self.conn.settimeout(None)
+        self.conn.settimeout(0.5)
+
+        try:
+            self.conn.connect(self.addr)
+            print("SSL established. Peer: {}".format(self.conn.getpeercert()))
+        except Exception as e:
+            print(e)
+            print("TIMEOUT - cannot connect to server")
+            return False
         
     def disconnect(self):
         self.send_m(self.disconnect_msg)
@@ -41,7 +49,6 @@ class Client:
         print(send_len)
         if isinstance(msg, str):
             msg = msg.encode()
-        print(msg)
         self.conn.send(msg) 
         print(self.conn.recv(1024).decode(self.encoding))
 

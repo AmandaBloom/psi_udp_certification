@@ -59,7 +59,7 @@ class Server:
                 print(f"from: {self.server_adr}:{addr[1]} message_len: {len(msg)}")
 
                 received_stream = deserialize(msg)
-                save_stream(received_stream, display=True)
+                save_stream(received_stream, display=False)
                 response = "Recived stream nr " + str(len(msg)) + " " + str(datetime.now().strftime("%m_%d_%Y_%H:%M:%S"))
                 conn_with_client.sendall(response.encode(self.encoding))
         print("client disconected")

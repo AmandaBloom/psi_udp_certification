@@ -1,4 +1,5 @@
 from copyreg import pickle
+from http import client
 import pickle
 from pydoc import cli
 import time
@@ -38,6 +39,13 @@ class AppClient:
             time.sleep(0.2)
         
         return messages
+
+    def get_messages2(self, num, stream_id, con_id):
+        with open('sampleCSV/ford_escort.csv', 'r', encoding='utf-8') as file:
+            text = file.read()
+            m = Message(1, stream_id, con_id, text)
+            
+    
     
     def add_client(self):
         self.ever_clients += 1
@@ -57,6 +65,8 @@ class AppClient:
         return self.clients
 
     def connect_client(self, client_id):
+        if client_id <= 0:
+            raise ValueError('client_id has to be positive')
         client = self.get_client(client_id)
         if client:
             client.connect()
@@ -88,9 +98,6 @@ class AppClient:
         ids = self.get_clients_ids()
         for client_id in ids:
             self.disconnect_client(client_id)
-
-    # stream
-    # stream_id, con_id
     
         
     def add_stream(self, client_id):
@@ -111,6 +118,7 @@ class AppClient:
         # stream.load_stream(self.get_messages1(10, stream_id, client_id))
         msg_stream = pickle.dumps(stream)
         client.send_m(msg_stream)
+        self.delete_stream(stream_id)
 
     def get_client_streams(self, client_id):
         ids = []
@@ -124,8 +132,16 @@ class AppClient:
         for id in ids:
             self.send_stream(client_id, id)
         
-    def delete_stream(self):
-        pass
+    def delete_stream(self, stream_id):
+        for stream in self.streams:
+            if stream.stream_id == stream_id:
+                self.streams.remove(stream)
+    
+    def delete_streams(self, client_id):
+        for id in self.get_client_streams(client_id):
+            self.delete_stream(id)
+        
+    
 
 
 def run_app_client(port, header_size, server_adr, ip_protocol):
@@ -140,6 +156,7 @@ def run_app_client(port, header_size, server_adr, ip_protocol):
     app.add_stream(1)
     app.add_stream(2)
     app.add_stream(2)
+
 
     client_ids = app.get_clients_ids()
 
